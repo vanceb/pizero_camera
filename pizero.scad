@@ -146,7 +146,7 @@ module cutout_case(
     linear_extrude(height = thickness) {
         translate([clear_x, clear_y, 0]) {
             offset(r = edge_clearance + thickness)
-                square([w + edge_clearance + cable_clearance + thickness, d + edge_clearance + camera_cable_clearance + thickness], center=true);
+                square([w + cable_clearance, d + camera_cable_clearance], center=true);
         }
     }
 
@@ -158,18 +158,18 @@ module cutout_case(
                 linear_extrude(height = thickness + standoff_height + h + top_clearance) {
                     difference() {
                         offset(r = edge_clearance + thickness)
-                            square([w + edge_clearance + cable_clearance + thickness, d + edge_clearance + camera_cable_clearance + thickness], center=true);
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
                         offset(r = edge_clearance)
-                            square([w + edge_clearance + cable_clearance, d + edge_clearance + camera_cable_clearance], center=true);
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
                     }
                 }
                 // Lip for lid seating
                 linear_extrude(height = thickness + standoff_height + h + top_clearance + lip_height - fit_tolerance) {
                     difference() {
                         offset(r = edge_clearance + thickness/2)
-                            square([w + edge_clearance + cable_clearance + thickness, d + edge_clearance + camera_cable_clearance + thickness], center=true);
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
                         offset(r = edge_clearance)
-                            square([w + edge_clearance + cable_clearance, d + edge_clearance + camera_cable_clearance], center=true);
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
                     }
                 }
             }
@@ -266,5 +266,65 @@ module cutout_case(
         mount_pillar();
 }
 
+
+module lid(
+            camera_dia=6, 
+            camera_pcb_height=3,
+            thickness=2,
+            standoff_height=5,
+            edge_clearance=1,
+            camera_cable_clearance=0,
+            cable_clearance=0,
+            pi_face_down=true,
+            lip_height=1,
+            fit_tolerance=0.1
+        ) {
+    // How far to offset the case depending on cable room required, so piis still centered on the axes
+    clear_x = pi_face_down ? -camera_cable_clearance/2 : camera_cable_clearance/2;
+    clear_y = pi_face_down ? -cable_clearance/2 : cable_clearance/2;
+    // Maximum extrude distance so we cut the case
+    max_ex = w + camera_cable_clearance + 2*thickness;
+    // Base
+    difference() {
+        linear_extrude(height = thickness) {
+            translate([clear_x, clear_y, 0]) {
+                offset(r = edge_clearance + thickness)
+                    square([w + cable_clearance, d + camera_cable_clearance], center=true);
+            }
+        }
+        // Camera Lens cutout
+        cylinder(r=camera_dia/2, h=2*max_ex, center=true);
+    }
+
+    // Sides
+    difference() {
+        translate([clear_x, clear_y, 0]) {
+            union() {
+                // Main case body
+                linear_extrude(height = thickness + camera_pcb_height) {
+                    difference() {
+                        offset(r = edge_clearance + thickness)
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
+                        offset(r = edge_clearance)
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
+                    }
+                }
+                // Lip for seating
+                linear_extrude(height = thickness + camera_pcb_height + lip_height + fit_tolerance) {
+                    difference() {
+                        offset(r = edge_clearance + thickness)
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
+                        offset(r = edge_clearance + thickness/2 + fit_tolerance)
+                            square([w + cable_clearance, d + camera_cable_clearance], center=true);
+                    }
+                }
+            }
+        }
+   } 
+}
+
 cutout_case(thickness = 2, cut_clearance=1, cable_clearance=10, camera_cable_clearance=10);
+//lid(thickness=2, cable_clearance=10, camera_cable_clearance=10, fit_tolerance=0);
+//translate([0,0,7 + h/2])
+//rotate([180,0,0])
 //pi_zero();
