@@ -126,6 +126,8 @@ module cutout_case(
                     edge_clearance=2, 
                     top_clearance=2,
                     cut_clearance=1.5,
+                    cable_clearance=2,          // Extra space on the side where the cables are
+                    camera_cable_clearance=2,   // Extra space for the camera flexi cable
                     cut_hdmi=true,
                     cut_usb1=true,
                     cut_usb2=true,
@@ -134,29 +136,40 @@ module cutout_case(
                     lip_height= 1,
                     fit_tolerance = 0.1
                    ) {
+    // How far to offset the case depending on cable room required, so piis still centered on the axes
+    clear_x = pi_face_down ? -camera_cable_clearance/2 : camera_cable_clearance/2;
+    clear_y = pi_face_down ? -cable_clearance/2 : cable_clearance/2;
+    // Maximum extrude distance so we cut the case
+    max_ex = w + camera_cable_clearance + 2*thickness;
     // Base
     linear_extrude(height = thickness) {
-        offset(r = edge_clearance + thickness)
-            square([w + edge_clearance + thickness, d + edge_clearance + thickness], center=true);
+        translate([clear_x, clear_y, 0]) {
+            offset(r = edge_clearance + thickness)
+                square([w + edge_clearance + cable_clearance + thickness, d + edge_clearance + camera_cable_clearance + thickness], center=true);
+        }
     }
 
     // Sides
     difference() {
-        union() {
-            linear_extrude(height = thickness + standoff_height + h + top_clearance) {
-                difference() {
-                    offset(r = edge_clearance + thickness)
-                        square([w + edge_clearance + thickness, d + edge_clearance + thickness], center=true);
-                    offset(r = edge_clearance)
-                        square([w + edge_clearance, d + edge_clearance], center=true);
+        translate([clear_x, clear_y, 0]) {
+            union() {
+                // Main case body
+                linear_extrude(height = thickness + standoff_height + h + top_clearance) {
+                    difference() {
+                        offset(r = edge_clearance + thickness)
+                            square([w + edge_clearance + cable_clearance + thickness, d + edge_clearance + camera_cable_clearance + thickness], center=true);
+                        offset(r = edge_clearance)
+                            square([w + edge_clearance + cable_clearance, d + edge_clearance + camera_cable_clearance], center=true);
+                    }
                 }
-            }
-            linear_extrude(height = thickness + standoff_height + h + top_clearance + lip_height - fit_tolerance) {
-                difference() {
-                    offset(r = edge_clearance + thickness/2)
-                        square([w + edge_clearance + thickness, d + edge_clearance + thickness], center=true);
-                    offset(r = edge_clearance)
-                        square([w + edge_clearance, d + edge_clearance], center=true);
+                // Lip for lid seating
+                linear_extrude(height = thickness + standoff_height + h + top_clearance + lip_height - fit_tolerance) {
+                    difference() {
+                        offset(r = edge_clearance + thickness/2)
+                            square([w + edge_clearance + cable_clearance + thickness, d + edge_clearance + camera_cable_clearance + thickness], center=true);
+                        offset(r = edge_clearance)
+                            square([w + edge_clearance + cable_clearance, d + edge_clearance + camera_cable_clearance], center=true);
+                    }
                 }
             }
         }
@@ -164,17 +177,16 @@ module cutout_case(
             tx = hdmi_x;
             ty = pi_face_down ? -hdmi_y : hdmi_y;
             tz = pi_face_down ? thickness + standoff_height - hdmi_h/2 : thickness + standoff_height + h + hdmi_h/2;
-            ex = edge_clearance + thickness + hdmi_d;
 
             translate([tx, ty, tz])
             if(pi_face_down) {
                 rotate([90,0,0])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([hdmi_w,hdmi_h], center=true);            
             } else {
                 rotate([-90,0,0])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([hdmi_w,hdmi_h], center=true);            
             }
@@ -183,17 +195,16 @@ module cutout_case(
             tx = musb_x1;
             ty = pi_face_down ? -musb_y : musb_y;
             tz = pi_face_down ? thickness + standoff_height - musb_h/2 : thickness + standoff_height + h + musb_h/2;
-            ex = edge_clearance + thickness + hdmi_d;
 
             translate([tx, ty, tz])
             if(pi_face_down) {
                 rotate([90,0,0])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([musb_w,musb_h], center=true);            
             } else {
                 rotate([-90,0,0])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([musb_w,musb_h], center=true);            
             }
@@ -202,17 +213,16 @@ module cutout_case(
             tx = musb_x2;
             ty = pi_face_down ? -musb_y : musb_y;
             tz = pi_face_down ? thickness + standoff_height - musb_h/2 : thickness + standoff_height + h + musb_h/2;
-            ex = edge_clearance + thickness + hdmi_d;
 
             translate([tx, ty, tz])
             if(pi_face_down) {
                 rotate([90,0,0])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([musb_w,musb_h], center=true);            
             } else {
                 rotate([-90,0,0])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([musb_w,musb_h], center=true);            
             }
@@ -221,11 +231,10 @@ module cutout_case(
             tx = sd_x;
             ty = pi_face_down ? -sd_y : sd_y;
             tz = pi_face_down ? thickness + standoff_height - sd_h/2 : thickness + standoff_height + h + sd_h/2;
-            ex = edge_clearance + thickness + sd_w;
 
             translate([tx, ty, tz])
                 rotate([-90,0,-90])
-                linear_extrude(ex)
+                linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([sd_d,sd_h], center=true);            
         }
@@ -242,5 +251,5 @@ module cutout_case(
         mount_pillar();
 }
 
-cutout_case(thickness = 2, cut_clearance=1);
+cutout_case(thickness = 2, cut_clearance=1, cable_clearance=10, camera_cable_clearance=10);
 //pi_zero();
