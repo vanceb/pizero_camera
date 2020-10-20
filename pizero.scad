@@ -132,6 +132,7 @@ module cutout_case(
                     cut_usb1=true,
                     cut_usb2=true,
                     cut_sd=true,
+                    cable_dia=5,
                     pi_face_down=true,
                     lip_height= 1,
                     fit_tolerance = 0.1
@@ -237,6 +238,20 @@ module cutout_case(
                 linear_extrude(max_ex)
                 offset(r=cut_clearance)
                 square([sd_d,sd_h], center=true);            
+        }
+        // Cut a cable exit slot if configured correctly
+        if (cable_dia > 0 && cable_clearance > cable_dia) {
+            tx = 0;
+            ty = pi_face_down ? -(d/2 + cable_clearance - cable_dia/2) : (d/2 + cable_clearance - cable_dia/2);
+            tz = pi_face_down ? thickness + (standoff_height + h + top_clearance - cable_dia/2) : thickness + standoff_height + h + sd_h/2;
+
+            translate([tx, ty, tz])
+                rotate([90,0,-90])
+                linear_extrude(max_ex) {
+                circle(cable_dia/2);
+                translate([0,cable_dia/2,0])
+                square(cable_dia, center=true);
+            }
         }
     }
 
