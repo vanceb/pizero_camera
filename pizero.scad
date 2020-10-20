@@ -130,7 +130,9 @@ module cutout_case(
                     cut_usb1=true,
                     cut_usb2=true,
                     cut_sd=true,
-                    pi_face_down=true
+                    pi_face_down=true,
+                    lip_height= 1,
+                    fit_tolerance = 0.1
                    ) {
     // Base
     linear_extrude(height = thickness) {
@@ -140,12 +142,22 @@ module cutout_case(
 
     // Sides
     difference() {
-        linear_extrude(height = thickness + standoff_height + h + top_clearance) {
-            difference() {
-                offset(r = edge_clearance + thickness)
-                    square([w + edge_clearance + thickness, d + edge_clearance + thickness], center=true);
-                offset(r = edge_clearance)
-                    square([w + edge_clearance, d + edge_clearance], center=true);
+        union() {
+            linear_extrude(height = thickness + standoff_height + h + top_clearance) {
+                difference() {
+                    offset(r = edge_clearance + thickness)
+                        square([w + edge_clearance + thickness, d + edge_clearance + thickness], center=true);
+                    offset(r = edge_clearance)
+                        square([w + edge_clearance, d + edge_clearance], center=true);
+                }
+            }
+            linear_extrude(height = thickness + standoff_height + h + top_clearance + lip_height - fit_tolerance) {
+                difference() {
+                    offset(r = edge_clearance + thickness/2)
+                        square([w + edge_clearance + thickness, d + edge_clearance + thickness], center=true);
+                    offset(r = edge_clearance)
+                        square([w + edge_clearance, d + edge_clearance], center=true);
+                }
             }
         }
         if (cut_hdmi) {
